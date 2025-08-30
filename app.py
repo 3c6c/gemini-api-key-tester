@@ -1,16 +1,55 @@
 import requests
 import json
-from flask import Flask, g, render_template, request, jsonify
+from flask import Flask, g, render_template, request, jsonify, redirect
 import sqlite3
+import datetime
 
 app = Flask(__name__)
+DATABASE = 'database.db'
+
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+        db.row_factory = sqlite3.Row
+    return db
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+
+def init_db():
+    """Initializes the database."""
+    db = get_db()
+    db.execute(
+        'CREATE TABLE IF NOT EXISTS api_keys ('
+        ' id INTEGER PRIMARY KEY AUTOINCREMENT,'
+        ' name TEXT,'
+        ' key TEXT NOT NULL UNIQUE,'
+        ' status TEXT NOT NULL,'
+        ' last_checked TEXT NOT NULL'
+        ')'
+    )
+    db.commit()
+
+@app.cli.command('init-db')
+def init_db_command():
+    """Clear the existing data and create new tables."""
+    init_db()
+    print('Initialized the database.')
 
 @app.route('/', methods=['GET', 'POST'])
-def test_api_key():
+def index():
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '', type=str)
+    page_size = 5  # Number of keys per page
+
     if request.method == 'POST':
         api_key = request.form.get('api_key')
         prompt = request.form.get('prompt', 'Explain how AI works in a few words')
-    else: # GET request
+    else:  # GET request
         api_key = request.args.get('api_key')
         prompt = request.args.get('prompt', 'Explain how AI works in a few words')
 
@@ -44,8 +83,17 @@ def test_api_key():
                 status = "valid"
                 message = "API key is valid and request was successful."
             elif response.status_code == 400:
-                status = "invalid_format"
-                message = "Bad request. Check API key format or payload."
+                # Check for specific error messages in the response
+                if 'error' in response_data and 'message' in response_data['error']:
+                    if "API key expired" in response_data['error']['message']:
+                        status = "expired"
+                        message = "The API key has expired."
+                    else:
+                        status = "invalid_format"
+                        message = response_data['error']['message']
+                else:
+                    status = "invalid_format"
+                    message = "Bad request. Check API key format or payload."
             elif response.status_code == 403:
                 status = "invalid_key_or_permission"
                 message = "Forbidden. API key may be invalid or lack permissions."
@@ -62,6 +110,37 @@ def test_api_key():
                 "api_response": response_data
             }
 
+            db = get_db()
+            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            # Check if the key exists in the database
+            existing_key = db.execute('SELECT id FROM api_keys WHERE key = ?', (api_key,)).fetchone()
+
+            if existing_key:
+                # If it exists, always update it
+                db.execute(
+                    'UPDATE api_keys SET status = ?, last_checked = ? WHERE key = ?',
+                    (status, now, api_key)
+                )
+                db.commit()
+            elif request.form.get('save_key'):
+                # If it's a new key, only save it if the checkbox is checked
+                name = request.form.get('key_name')
+                if not name:
+                    # Generate a default name
+                    count = db.execute('SELECT COUNT(id) FROM api_keys').fetchone()[0]
+                    name = f"Key #{count + 1}"
+                # Validate API key format
+                if not (api_key.startswith('AIza') and len(api_key) == 39):
+                    print("Invalid API key format. Key not saved.")
+                else:
+                    db.execute(
+                        'INSERT INTO api_keys (name, key, status, last_checked) VALUES (?, ?, ?, ?)',
+                        (name, api_key, status, now)
+                    )
+                    db.commit()
+
+
         except requests.exceptions.RequestException as e:
             result = {
                 "status": "error",
@@ -74,8 +153,37 @@ def test_api_key():
                 "message": "Failed to decode API response",
                 "api_response": None
             }
-            
-    return render_template('api_test.html', result=result)
+    
+    db = get_db()
+    
+    # Apply search filter
+    if search:
+        query = 'SELECT * FROM api_keys WHERE name LIKE ? OR key LIKE ? ORDER BY last_checked DESC'
+        params = ('%' + search + '%', '%' + search + '%')
+        total_keys = db.execute('SELECT COUNT(id) FROM api_keys WHERE name LIKE ? OR key LIKE ?', params).fetchone()[0]
+    else:
+        query = 'SELECT * FROM api_keys ORDER BY last_checked DESC'
+        params = ()
+        total_keys = db.execute('SELECT COUNT(id) FROM api_keys').fetchone()[0]
+
+    # Apply pagination
+    offset = (page - 1) * page_size
+    query += ' LIMIT ? OFFSET ?'
+    params = params + (page_size, offset)
+
+    keys = db.execute(query, params).fetchall()
+
+    if request.method == 'POST':
+        return redirect('/')
+    else:
+        return render_template('api_test.html', result=result, keys=keys, page=page, page_size=page_size, total_keys=total_keys, search=search, api_key=api_key)
+
+@app.route('/delete_key/<int:key_id>', methods=['POST'])
+def delete_key(key_id):
+    db = get_db()
+    db.execute('DELETE FROM api_keys WHERE id = ?', (key_id,))
+    db.commit()
+    return redirect('/')
 
 if __name__ == '__main__':
     app.run(debug=True)
