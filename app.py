@@ -173,10 +173,7 @@ def index():
 
     keys = db.execute(query, params).fetchall()
 
-    if request.method == 'POST':
-        return redirect('/')
-    else:
-        return render_template('api_test.html', result=result, keys=keys, page=page, page_size=page_size, total_keys=total_keys, search=search, api_key=api_key)
+    return render_template('api_test.html', result=result, keys=keys, page=page, page_size=page_size, total_keys=total_keys, search=search, api_key=api_key)
 
 @app.route('/delete_key/<int:key_id>', methods=['POST'])
 def delete_key(key_id):
@@ -184,6 +181,23 @@ def delete_key(key_id):
     db.execute('DELETE FROM api_keys WHERE id = ?', (key_id,))
     db.commit()
     return redirect('/')
+
+@app.route('/update_key/<int:key_id>', methods=['POST'])
+def update_key(key_id):
+    db = get_db()
+    new_api_key = request.form.get('new_api_key')
+
+    # Get the old API key from the database
+    old_api_key = db.execute('SELECT key FROM api_keys WHERE id = ?', (key_id,)).fetchone()['key']
+
+    if new_api_key == old_api_key:
+        # If the new API key is the same as the old one, return an error message
+        return "Error: New API key cannot be the same as the old one."
+    else:
+        # If the new API key is different from the old one, update the API key in the database
+        db.execute('UPDATE api_keys SET key = ? WHERE id = ?', (new_api_key, key_id))
+        db.commit()
+        return redirect('/')
 
 if __name__ == '__main__':
     app.run(debug=True)
