@@ -1,3 +1,4 @@
 .venv/
 ai_docs/
 *.db
+__pycache__/
