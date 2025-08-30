@@ -2,195 +2,7 @@
 <html>
 <head>
     <title>API Key Tester</title>
-    <style>
-        :root {
-            --background-light: #f8f9fa;
-            --text-light: #212529;
-            --primary-light: #007bff;
-            --primary-hover-light: #0056b3;
-            --border-light: #dee2e6;
-            --card-background-light: #ffffff;
-
-            --background-dark: #121212;
-            --text-dark: #e9ecef;
-            --primary-dark: #6610f2;
-            --primary-hover-dark: #4b08b3;
-            --border-dark: #495057;
-            --card-background-dark: #1e1e1e;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            margin: 0;
-            padding: 2rem;
-            background-color: var(--background-light);
-            color: var(--text-light);
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        body.dark-mode {
-            background-color: var(--background-dark);
-            color: var(--text-dark);
-        }
-
-        .container {
-            max-width: 700px;
-            margin: auto;
-            padding: 2rem;
-            background-color: var(--card-background-light);
-            border: 1px solid var(--border-light);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-
-        body.dark-mode .container {
-            background-color: var(--card-background-dark);
-            border-color: var(--border-dark);
-        }
-
-        h1, h2, h3 {
-            color: var(--primary-light);
-        }
-        
-        body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 {
-            color: var(--primary-dark);
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        input[type="text"],
-        textarea {
-            width: 100%;
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            border: 1px solid var(--border-light);
-            border-radius: 8px;
-            background-color: var(--background-light);
-            color: var(--text-light);
-            box-sizing: border-box;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-
-        body.dark-mode input[type="text"],
-        body.dark-mode textarea {
-            background-color: var(--card-background-dark);
-            color: var(--text-dark);
-            border-color: var(--border-dark);
-        }
-
-        button {
-            background-color: var(--primary-light);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-
-        button:hover {
-            background-color: var(--primary-hover-light);
-        }
-
-        body.dark-mode button {
-            background-color: var(--primary-dark);
-        }
-
-        body.dark-mode button:hover {
-            background-color: var(--primary-hover-dark);
-        }
-
-        .results {
-            margin-top: 2rem;
-            padding: 1.5rem;
-            border: 1px solid var(--border-light);
-            border-radius: 8px;
-            background-color: var(--background-light);
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-
-        body.dark-mode .results {
-            background-color: var(--card-background-dark);
-            border-color: var(--border-dark);
-        }
-
-        pre {
-            background-color: #e9ecef;
-            padding: 1rem;
-            border-radius: 8px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            color: #212529;
-        }
-
-        body.dark-mode pre {
-            background-color: #2c2c2c;
-            color: #e9ecef;
-        }
-
-        .status-valid { color: #28a745; }
-        .status-invalid_key_or_permission, .status-invalid_format { color: #dc3545; }
-        .status-rate_limited { color: #fd7e14; }
-        .status-error { color: #dc3545; }
-        .status-unknown { color: #6c757d; }
-
-        .theme-switch-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            margin-bottom: 1rem;
-        }
-
-        .theme-switch {
-            display: inline-block;
-            height: 24px;
-            position: relative;
-            width: 48px;
-        }
-
-        .theme-switch input {
-            display:none;
-        }
-
-        .slider {
-            background-color: #ccc;
-            bottom: 0;
-            cursor: pointer;
-            left: 0;
-            position: absolute;
-            right: 0;
-            top: 0;
-            transition: .4s;
-            border-radius: 24px;
-        }
-
-        .slider:before {
-            background-color: #fff;
-            bottom: 4px;
-            content: "";
-            height: 16px;
-            left: 4px;
-            position: absolute;
-            transition: .4s;
-            width: 16px;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--primary-dark);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(24px);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="theme-switch-wrapper">
@@ -203,49 +15,127 @@
         <h1>Gemini API Key Tester</h1>
         <form id="apiForm" method="POST" action="/">
             <label for="api_key">API Key:</label>
-            <input type="text" id="api_key" name="api_key" required>
+            <input type="text" id="api_key" name="api_key" value="{{ api_key or '' }}" required>
+
+            <label for="key_name">Key Name (Optional):</label>
+            <input type="text" id="key_name" name="key_name" placeholder="Recommended to put account name.">
 
             <label for="prompt">Prompt:</label>
             <textarea id="prompt" name="prompt" rows="4" required>Explain how AI works in a few words</textarea>
+
+            <div class="save-key-wrapper">
+                <input type="checkbox" id="save_key" name="save_key" value="true">
+                <label for="save_key">Save API Key to Database</label>
+            </div>
 
             <button type="submit">Test API Key</button>
         </form>
 
         {% if result %}
-        <div class="results">
-            <h2>Test Results:</h2>
-            <p><strong>Status:</strong> <span class="status-{{ result.status }}">{{ result.status.capitalize() }}</span></p>
+        <details class="results">
+            <summary>
+                Test Results: <span class="status-{{ result.status }}">{{ result.status.capitalize() }}</span> (Click to expand)
+            </summary>
             <p><strong>Message:</strong> {{ result.message }}</p>
             {% if result.api_response %}
                 <h3>API Response Details:</h3>
                 <pre>{{ result.api_response | tojson(indent=2) }}</pre>
             {% endif %}
-        </div>
+        </details>
         {% endif %}
     </div>
+
+    <div class="container" style="margin-top: 2rem;">
+        <h2>Saved API Keys</h2>
+
+        <form action="/" method="GET" class="search-form">
+            <input type="text" name="search" placeholder="Search API Keys" value="{{ search }}">
+            <button type="submit">Search</button>
+            {% if search %}
+                <a href="/" class="clear-search">Clear Search</a>
+            {% endif %}
+        </form>
+
+        <div class="keys-list">
+            {% if keys %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>API Key (Partial)</th>
+                            <th>Status</th>
+                            <th>Last Checked</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key in keys %}
+                            <tr>
+                                <td>{{ key['name'] }}</td>
+                                <td>{{ key['key'][:4] }}...{{ key['key'][-4:] }}</td>
+                                <td><span class="status-{{ key['status'] }}">{{ key['status'].capitalize() }}</span></td>
+                                <td>{{ key['last_checked'] }}</td>
+                                <td class="actions">
+                                    <a href="/?api_key={{ key['key'] }}&search={{search}}&page={{page}}" class="button-link">Test</a>
+                                    <a href="/?api_key={{ key['key'] }}" class="button-link">Edit</a>
+                                    <form action="{{ url_for('delete_key', key_id=key['id']) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="delete-btn">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No API keys saved yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="pagination">
+            {% if page > 1 %}
+                <a href="/?page={{ page - 1 }}&search={{search}}" class="page-link">Previous</a>
+            {% endif %}
+
+            {% set num_pages = (total_keys / page_size)|round(method='ceil')|int %}
+            {% for p in range(1, num_pages + 1) %}
+                <a href="/?page={{ p }}&search={{search}}" class="page-link {% if p == page %}active{% endif %}">{{ p }}</a>
+            {% endfor %}
+
+            {% if page * page_size < total_keys %}
+                <a href="/?page={{ page + 1 }}&search={{search}}" class="page-link">Next</a>
+            {% endif %}
+        </div>
+    </div>
     <script>
-        const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
-        const currentTheme = localStorage.getItem('theme');
+        const checkbox = document.getElementById('checkbox');
+        const body = document.body;
 
-        if (currentTheme) {
-            document.body.classList.add(currentTheme);
-        
-            if (currentTheme === 'dark-mode') {
-                toggleSwitch.checked = true;
-            }
-        }
-
-        function switchTheme(e) {
-            if (e.target.checked) {
-                document.body.classList.add('dark-mode');
-                localStorage.setItem('theme', 'dark-mode');
+        // Function to set the theme
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                body.classList.add('dark-mode');
             } else {
-                document.body.classList.remove('dark-mode');
-                localStorage.setItem('theme', 'light-mode');
+                body.classList.remove('dark-mode');
             }
         }
 
-        toggleSwitch.addEventListener('change', switchTheme, false);
+        // Check local storage for theme
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            setTheme(storedTheme);
+            checkbox.checked = storedTheme === 'dark';
+        }
+
+        // Listen for changes on the checkbox
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                setTheme('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                setTheme('light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
     </script>
 </body>
 </html>
