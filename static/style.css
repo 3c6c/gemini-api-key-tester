@@ -33,9 +33,9 @@
 
         /* Container styles */
         .container {
-            max-width: 700px;
+            max-width: 90%;
             margin: auto;
-            padding: 2rem;
+            padding: 1rem;
             background-color: var(--card-background-light);
             border: 1px solid var(--border-light);
             border-radius: 12px;
@@ -112,7 +112,7 @@
 
         /* Results styles */
         .results {
-            margin-top: 2rem;
+            margin-top: 1rem;
             padding: 1.5rem;
             border: 1px solid var(--border-light);
             border-radius: 8px;
@@ -308,4 +308,28 @@
             padding: 1rem;
             margin-top: 0;
         }
-    
+
+        /* Media queries for responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+
+            .results {
+                padding: 1rem;
+            }
+        }
+
+        #api_test_results {
+            margin-top: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background-color: var(--background-light);
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+
+        body.dark-mode #api_test_results {
+            background-color: var(--card-background-dark);
+            border-color: var(--border-dark);
+        }

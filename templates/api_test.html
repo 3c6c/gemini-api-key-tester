@@ -31,10 +31,11 @@
             <button type="submit">Test API Key</button>
         </form>
 
+
         {% if result %}
         <details class="results">
             <summary>
-                Test Results: <span class="status-{{ result.status }}">{{ result.status.capitalize() }}</span> (Click to expand)
+                Test Results: <span class="status-{{ result.status }}">{{ result.status.capitalize() }} </span> (Click to show more detail)
             </summary>
             <p><strong>Message:</strong> {{ result.message }}</p>
             {% if result.api_response %}
@@ -77,9 +78,14 @@
                                 <td>{{ key['last_checked'] }}</td>
                                 <td class="actions">
                                     <a href="/?api_key={{ key['key'] }}&search={{search}}&page={{page}}" class="button-link">Test</a>
-                                    <a href="/?api_key={{ key['key'] }}" class="button-link">Edit</a>
+                                    <button type="button" class="button-link edit-btn" data-key-id="{{ key['id'] }}">Edit</button>
                                     <form action="{{ url_for('delete_key', key_id=key['id']) }}" method="POST" style="display:inline;">
                                         <button type="submit" class="delete-btn">Delete</button>
+                                    </form>
+                                    <form class="edit-form" data-key-id="{{ key['id'] }}" action="{{ url_for('update_key', key_id=key['id']) }}" method="POST" style="display:none;">
+                                        <input type="text" name="new_api_key" placeholder="New API Key" required>
+                                        <button type="submit" class="update-btn">Update</button>
+                                        <div class="error-message" style="color: red; display: none;">New API key cannot be the same as the old one.</div>
                                     </form>
                                 </td>
                             </tr>
@@ -135,6 +141,41 @@
                 setTheme('light');
                 localStorage.setItem('theme', 'light');
             }
+        });
+
+        // Edit API Key functionality
+        const editButtons = document.querySelectorAll('.edit-btn');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default action
+                const keyId = this.dataset.keyId;
+                const row = this.closest('tr');
+                const editForm = row.querySelector('.edit-form');
+                const apiKeyCell = row.querySelector('td:nth-child(2)'); // Select the second td (API Key)
+                const oldApiKey = apiKeyCell.textContent.replace('...', ''); // Extract the old API key
+                const newApiKeyInput = editForm.querySelector('input[name="new_api_key"]');
+                const updateButton = editForm.querySelector('.update-btn');
+                const errorMessage = editForm.querySelector('.error-message');
+
+                editForm.style.display = 'inline';
+
+                // Function to validate if the new API key is the same as the old one
+                function validateApiKey() {
+                    if (newApiKeyInput.value === oldApiKey) {
+                        updateButton.disabled = true;
+                        errorMessage.style.display = 'block';
+                    } else {
+                        updateButton.disabled = false;
+                        errorMessage.style.display = 'none';
+                    }
+                }
+
+                // Validate on input change
+                newApiKeyInput.addEventListener('input', validateApiKey);
+
+                // Initial validation
+                validateApiKey();
+            });
         });
     </script>
 </body>
