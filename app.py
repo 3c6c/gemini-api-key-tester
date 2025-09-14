@@ -3,6 +3,7 @@ import json
 from flask import Flask, g, render_template, request, jsonify, redirect
 import sqlite3
 import datetime
+import os
 
 app = Flask(__name__)
 DATABASE = 'database.db'
@@ -40,6 +41,21 @@ def init_db_command():
     init_db()
     print('Initialized the database.')
 
+def initialize_database():
+    """Initializes the database and table if they do not exist."""
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='api_keys'")
+        if cursor.fetchone() is None:
+            init_db()
+            print('Initialized the database.')
+
+@app.before_request
+def before_request():
+    """Create the database and table if they don't exist."""
+    initialize_database()
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     page = request.args.get('page', 1, type=int)
@@ -48,32 +64,19 @@ def index():
 
     if request.method == 'POST':
         api_key = request.form.get('api_key')
-        prompt = request.form.get('prompt', 'Explain how AI works in a few words')
     else:  # GET request
         api_key = request.args.get('api_key')
-        prompt = request.args.get('prompt', 'Explain how AI works in a few words')
 
     result = {}
     if api_key:
-        api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+        api_url = "https://generativelanguage.googleapis.com/v1beta/models/"
         headers = {
             "Content-Type": "application/json",
             "X-goog-api-key": api_key
         }
-        payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": prompt
-                        }
-                    ]
-                }
-            ]
-        }
 
         try:
-            response = requests.post(api_url, headers=headers, json=payload)
+            response = requests.get(api_url, headers=headers)
             response_data = response.json()
 
             status = "unknown"
@@ -200,4 +203,4 @@ def update_key(key_id):
         return redirect('/')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
