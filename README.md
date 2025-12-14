@@ -59,27 +59,36 @@ bash <(wget -qO- https://raw.githubusercontent.com/3c6c/gemini-api-key-tester/ma
 If you have cloned the repository, you can run the script directly.
 
 ```bash
-./run_cli.sh [API_KEY] [PROMPT]
+./run_cli.sh [API_KEY]
+./run_cli.sh -f FILE
 ```
 
 **Arguments:**
 
-*   `API_KEY`: Your Gemini API key.
-*   `PROMPT`: The prompt to send to the API. If not provided, it defaults to "Explain how AI works in a few words".
+*   `API_KEY`: Your Gemini API key. If not provided, you will be prompted to enter it interactively.
+*   `-f FILE` or `--file FILE`: Path to a file containing lines in the format `owner:api_key`. Each key will be checked in turn, and the owner will be displayed with the result.
+
+**File Format Example:**
+
+```
+# keys.txt
+alice:AIzaSyA...abc
+bob:AIzaSyB...xyz
+```
 
 **Examples:**
 
-*   Run with both API key and prompt:
-    ```bash
-    ./run_cli.sh "YOUR_API_KEY" "What is the capital of France?"
-    ```
-
-*   Run with only the API key (will use the default prompt):
+*   Run with a single API key:
     ```bash
     ./run_cli.sh "YOUR_API_KEY"
     ```
 
-*   Run without any arguments (will prompt you for the API key and prompt):
+*   Run in batch mode with a file:
+    ```bash
+    ./run_cli.sh -f keys.txt
+    ```
+
+*   Run without any arguments (will prompt you for the API key):
     ```bash
     ./run_cli.sh
     ```
@@ -87,8 +96,7 @@ If you have cloned the repository, you can run the script directly.
 *   Display the help message:
     ```bash
     ./run_cli.sh -h
-
-     
+    ```
 
 ## ✨ Features
 
